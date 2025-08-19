@@ -30,7 +30,7 @@ input:focus {
 }
 
 #register-banner {
-  background: url("../img/bg-form.jpg");
+  background: url("../bg-form.jpg");
   background-size: cover;
   background-position: center;
   width: 50%;
