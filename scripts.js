@@ -1,250 +1,106 @@
-// Seleção de elementos
-const todoForm = document.querySelector("#todo-form");
-const todoInput = document.querySelector("#todo-input");
-const todoList = document.querySelector("#todo-list");
-const editForm = document.querySelector("#edit-form");
-const editInput = document.querySelector("#edit-input");
-const cancelEditBtn = document.querySelector("#cancel-edit-btn");
-const searchInput = document.querySelector("#search-input");
-const eraseBtn = document.querySelector("#erase-button");
-const filterBtn = document.querySelector("#filter-select");
+// Seleção de Elementos
+const generatePasswordButton = document.querySelector("#generate-password");
+const generatedPasswordElement = document.querySelector("#generated-password");
 
-let oldInputValue;
+// Novas funcionalidades
+const openCloseGeneratorButton = document.querySelector(
+  "#open-generate-password"
+);
+const generatePasswordContainer = document.querySelector("#generate-options");
+const lengthInput = document.querySelector("#length");
+const lettersInput = document.querySelector("#letters");
+const numbersInput = document.querySelector("#numbers");
+const symbolsInput = document.querySelector("#symbols");
+const copyPasswordButton = document.querySelector("#copy-password");
 
 // Funções
-const saveTodo = (text, done = 0, save = 1) => {
-  const todo = document.createElement("div");
-  todo.classList.add("todo");
+const getLetterLowerCase = () => {
+  return String.fromCharCode(Math.floor(Math.random() * 26) + 97);
+};
 
-  const todoTitle = document.createElement("h3");
-  todoTitle.innerText = text;
-  todo.appendChild(todoTitle);
+const getLetterUpperCase = () => {
+  return String.fromCharCode(Math.floor(Math.random() * 26) + 65);
+};
 
-  const doneBtn = document.createElement("button");
-  doneBtn.classList.add("finish-todo");
-  doneBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
-  todo.appendChild(doneBtn);
+const getNumber = () => {
+  return Math.floor(Math.random() * 10).toString();
+};
 
-  const editBtn = document.createElement("button");
-  editBtn.classList.add("edit-todo");
-  editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
-  todo.appendChild(editBtn);
+const getSymbol = () => {
+  const symbols = "(){}[]=<>/,.!@#$%&*+-";
+  return symbols[Math.floor(Math.random() * symbols.length)];
+};
 
-  const deleteBtn = document.createElement("button");
-  deleteBtn.classList.add("remove-todo");
-  deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-  todo.appendChild(deleteBtn);
+const generatePassword = (
+  getLetterLowerCase,
+  getLetterUpperCase,
+  getNumber,
+  getSymbol
+) => {
+  let password = "";
 
-  // Utilizando dados da localStorage
-  if (done) {
-    todo.classList.add("done");
+  //   Segunda versão
+  const passwordLength = +lengthInput.value;
+
+  const generators = [];
+
+  if (lettersInput.checked) {
+    generators.push(getLetterLowerCase, getLetterUpperCase);
   }
 
-  if (save) {
-    saveTodoLocalStorage({ text, done: 0 });
+  if (numbersInput.checked) {
+    generators.push(getNumber);
   }
 
-  todoList.appendChild(todo);
-
-  todoInput.value = "";
-};
-
-const toggleForms = () => {
-  editForm.classList.toggle("hide");
-  todoForm.classList.toggle("hide");
-  todoList.classList.toggle("hide");
-};
-
-const updateTodo = (text) => {
-  const todos = document.querySelectorAll(".todo");
-
-  todos.forEach((todo) => {
-    let todoTitle = todo.querySelector("h3");
-
-    if (todoTitle.innerText === oldInputValue) {
-      todoTitle.innerText = text;
-
-      // Utilizando dados da localStorage
-      updateTodoLocalStorage(oldInputValue, text);
-    }
-  });
-};
-
-const getSearchedTodos = (search) => {
-  const todos = document.querySelectorAll(".todo");
-
-  todos.forEach((todo) => {
-    const todoTitle = todo.querySelector("h3").innerText.toLowerCase();
-
-    todo.style.display = "flex";
-
-    console.log(todoTitle);
-
-    if (!todoTitle.includes(search)) {
-      todo.style.display = "none";
-    }
-  });
-};
-
-const filterTodos = (filterValue) => {
-  const todos = document.querySelectorAll(".todo");
-
-  switch (filterValue) {
-    case "all":
-      todos.forEach((todo) => (todo.style.display = "flex"));
-
-      break;
-
-    case "done":
-      todos.forEach((todo) =>
-        todo.classList.contains("done")
-          ? (todo.style.display = "flex")
-          : (todo.style.display = "none")
-      );
-
-      break;
-
-    case "todo":
-      todos.forEach((todo) =>
-        !todo.classList.contains("done")
-          ? (todo.style.display = "flex")
-          : (todo.style.display = "none")
-      );
-
-      break;
-
-    default:
-      break;
+  if (symbolsInput.checked) {
+    generators.push(getSymbol);
   }
+
+  console.log(generators.length);
+
+  if (generators.length === 0) {
+    return;
+  }
+
+  for (i = 0; i < passwordLength; i = i + generators.length) {
+    generators.forEach(() => {
+      const randomValue =
+        generators[Math.floor(Math.random() * generators.length)]();
+
+      password += randomValue;
+    });
+  }
+
+  password = password.slice(0, passwordLength);
+
+  generatedPasswordElement.style.display = "block";
+  generatedPasswordElement.querySelector("h4").innerText = password;
 };
 
 // Eventos
-todoForm.addEventListener("submit", (e) => {
+generatePasswordButton.addEventListener("click", () => {
+  generatePassword(
+    getLetterLowerCase,
+    getLetterUpperCase,
+    getNumber,
+    getSymbol
+  );
+});
+
+openCloseGeneratorButton.addEventListener("click", () => {
+  generatePasswordContainer.classList.toggle("hide");
+});
+
+copyPasswordButton.addEventListener("click", (e) => {
   e.preventDefault();
 
-  const inputValue = todoInput.value;
+  const password = generatedPasswordElement.querySelector("h4").innerText;
 
-  if (inputValue) {
-    saveTodo(inputValue);
-  }
-});
+  navigator.clipboard.writeText(password).then(() => {
+    copyPasswordButton.innerText = "Senha copiada com sucesso!";
 
-document.addEventListener("click", (e) => {
-  const targetEl = e.target;
-  const parentEl = targetEl.closest("div");
-  let todoTitle;
-
-  if (parentEl && parentEl.querySelector("h3")) {
-    todoTitle = parentEl.querySelector("h3").innerText || "";
-  }
-
-  if (targetEl.classList.contains("finish-todo")) {
-    parentEl.classList.toggle("done");
-
-    updateTodoStatusLocalStorage(todoTitle);
-  }
-
-  if (targetEl.classList.contains("remove-todo")) {
-    parentEl.remove();
-
-    // Utilizando dados da localStorage
-    removeTodoLocalStorage(todoTitle);
-  }
-
-  if (targetEl.classList.contains("edit-todo")) {
-    toggleForms();
-
-    editInput.value = todoTitle;
-    oldInputValue = todoTitle;
-  }
-});
-
-cancelEditBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  toggleForms();
-});
-
-editForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const editInputValue = editInput.value;
-
-  if (editInputValue) {
-    updateTodo(editInputValue);
-  }
-
-  toggleForms();
-});
-
-searchInput.addEventListener("keyup", (e) => {
-  const search = e.target.value;
-
-  getSearchedTodos(search);
-});
-
-eraseBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-
-  searchInput.value = "";
-
-  searchInput.dispatchEvent(new Event("keyup"));
-});
-
-filterBtn.addEventListener("change", (e) => {
-  const filterValue = e.target.value;
-
-  filterTodos(filterValue);
-});
-
-// Local Storage
-const getTodosLocalStorage = () => {
-  const todos = JSON.parse(localStorage.getItem("todos")) || [];
-
-  return todos;
-};
-
-const loadTodos = () => {
-  const todos = getTodosLocalStorage();
-
-  todos.forEach((todo) => {
-    saveTodo(todo.text, todo.done, 0);
+    setTimeout(() => {
+      copyPasswordButton.innerText = "Copiar";
+    }, 1000);
   });
-};
-
-const saveTodoLocalStorage = (todo) => {
-  const todos = getTodosLocalStorage();
-
-  todos.push(todo);
-
-  localStorage.setItem("todos", JSON.stringify(todos));
-};
-
-const removeTodoLocalStorage = (todoText) => {
-  const todos = getTodosLocalStorage();
-
-  const filteredTodos = todos.filter((todo) => todo.text != todoText);
-
-  localStorage.setItem("todos", JSON.stringify(filteredTodos));
-};
-
-const updateTodoStatusLocalStorage = (todoText) => {
-  const todos = getTodosLocalStorage();
-
-  todos.map((todo) =>
-    todo.text === todoText ? (todo.done = !todo.done) : null
-  );
-
-  localStorage.setItem("todos", JSON.stringify(todos));
-};
-
-const updateTodoLocalStorage = (todoOldText, todoNewText) => {
-  const todos = getTodosLocalStorage();
-
-  todos.map((todo) =>
-    todo.text === todoOldText ? (todo.text = todoNewText) : null
-  );
-
-  localStorage.setItem("todos", JSON.stringify(todos));
-};
-
-loadTodos();
+});
